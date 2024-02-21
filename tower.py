@@ -1,119 +1,114 @@
-import os
-import json
-from box_face import Boxface
+from level import Level
+from kmeans import kmeans1
+import cv2
 
-tower_path = "towers/tower2"
+
+class Side:
+    def __init__(self) -> None:
+        self.levels = []
+
+    def add_level(self, level):
+        self.levels.append(level)
+    
+    def sort(self):
+        self.levels = sorted(self.levels, key=lambda level: level.getYcenter())
 
 
 class Tower:
+    def __init__(self, levels: 3) -> None:
+        # Front, Right, Back, Left
+        self.front = None
+        self.right = None
+        self.back = None
+        self.left = None
+        self.levels_num = levels
 
-    def __get_sides(self):
-        front_side = []
-        right_side = []
-        back_side = []
-        left_side = []
-        with open(f"{tower_path}/json/front.json") as f:
-            front_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/right.json") as f:
-            right_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/back.json") as f:
-            back_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/left.json") as f:
-            left_side = self.__create_faces(json.load(f))
-        return front_side, right_side, back_side, left_side
+    def show_image(self,side_name ,levels, labels, image_path):
+        image = cv2.imread(image_path)
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+        for level in levels:
+            print("--------")
+            for i, box in enumerate(level.boxes):
+                # Define rectangle
 
-    def __create_faces(self, boxes: list):
-        return [
-            Boxface(
-                int(box["x1"]),
-                int(box["y1"]),
-                int(box["x2"]),
-                int(box["y2"]),
-                False if "is_hole" not in box else box["is_hole"],
-            )
-            for i, box in enumerate(boxes, start=1)
-        ]
-
-    def __separate_in_lines(self, side_faces: list):
-        """
-        This algorithm runs in O(n*n)
-        """
-        lines = []
-        while side_faces:
-            current = side_faces.pop(0)
-            cast_line = current.ycenter
-            line = [current]
-            remaining_faces = []
-            for face in side_faces:
-                if face.y1 < cast_line < face.y2:
-                    line.append(face)
-                else:
-                    remaining_faces.append(face)
-            side_faces = remaining_faces
-            lines.append(
-                {"cast_line": cast_line, "faces": sorted(line, key=lambda x: x.x1)}
-            )
-
-        return sorted(lines, key=lambda x: x["cast_line"])
-
-    def __count_corner_holes(self, lineA, lineB):
-        if lineA["faces"][-1].is_hole() and lineB["faces"][0].is_hole():
-            return 1
-        return 0
-
-    def __count_inner_holes(self, line):
-        holes = 0
-        for i in range(1, len(line["faces"]) - 1):
-            if line["faces"][i].is_hole():
-                holes += 1
-        return holes
-
-    def algorithm(self):
-        # Get the 4 sides
-        front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
-            self.__get_sides()
-        )
-        # separete every side into lines
-        front_lines = self.__separate_in_lines(front_side_faces)
-        right_lines = self.__separate_in_lines(right_side_faces)
-        back_lines = self.__separate_in_lines(back_side_faces)
-        left_lines = self.__separate_in_lines(left_side_faces)
-
-        # Count holes
-        holes = 0
-        if len(front_lines) == len(right_lines) == len(back_lines) == len(left_lines):
-            for line_num in range(len(front_lines)):
-                # check corners
-                holes += (
-                    self.__count_corner_holes(
-                        front_lines[line_num], right_lines[line_num]
-                    )
-                    + self.__count_corner_holes(
-                        right_lines[line_num], back_lines[line_num]
-                    )
-                    + self.__count_corner_holes(
-                        back_lines[line_num], left_lines[line_num]
-                    )
-                    + self.__count_corner_holes(
-                        left_lines[line_num], front_lines[line_num]
-                    )
+                color = colors[1]  # Green color
+                thickness = 5
+                label_text = f"Rectangle {i}"
+                print(i,box.x1)
+                label_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 3, 3)[0]
+                center_x = int((box.x1 + box.x2) // 2)
+                center_y = int((box.y1 + box.y2) // 2)
+                text_origin = (center_x - label_size[0] // 2, center_y + label_size[1] // 2)
+                cv2.putText(
+                    image,
+                    label_text,
+                    text_origin,
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    3,
+                    (0, 0, 255),
+                    3,
+                )
+                cv2.rectangle(
+                    image,
+                    (int(box.x1), int(box.y1)),
+                    (int(box.x2), int(box.y2)),
+                    color,
+                    thickness,
                 )
 
-                holes += (
-                    self.__count_inner_holes(front_lines[line_num])
-                    + self.__count_inner_holes(right_lines[line_num])
-                    + self.__count_inner_holes(back_lines[line_num])
-                    + self.__count_inner_holes(left_lines[line_num])
-                )
-        print("holes:", holes)
-        boxes_count = 0
-        # Best case when are simetrical without holes
-        for i in range(len(front_lines)):
-            aprox_size = len(front_lines[i]["faces"]) * len(right_lines[i]["faces"])
-            boxes_count += aprox_size
-        # Adress holes
-        print("boxes:", boxes_count - holes)
+        cv2.imshow(side_name, image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
+    def show_levels(self, levels, image_path):
+        image = cv2.imread(image_path)
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+        for i, level in enumerate(levels):
+            # Define rectangle
 
-tower = Tower()
-tower.algorithm()
+            color = colors[1]  # Green color
+            thickness = 10
+            
+            cv2.rectangle(
+                image,
+                (int(level.x1), int(level.y1)),
+                (int(level.x2), int(level.y2)),
+                color,
+                thickness,
+            )
+
+        cv2.imshow("Image", image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    def add_side(self, side_name, side_box, image_path):
+        # Cluster the boxes using only the ypos
+        data = [box.ycenter for box in side_box]
+        labels, centers = kmeans1(data, self.levels_num)
+        label_dict = {label: [] for label in set(labels)}
+
+        for label, number in zip(labels, side_box):
+            label_dict[label].append(number)
+
+        # Create levels and sides
+        side = Side()
+        # This is wrong
+
+        for l in label_dict.keys():
+            level = Level()
+            for box in label_dict[l]:
+                level.add_box(box)
+            level.sort()
+            side.add_level(level)
+        side.sort()
+
+        #self.show_levels(levels_list, image_path)
+        #self.show_image(side_name, side.levels, labels, image_path)
+        if side_name == "front":
+            self.front = side
+        if side_name == "right":
+            self.right = side
+        if side_name == "back":
+            self.back = side
+        if side_name == "left":
+            self.left = side

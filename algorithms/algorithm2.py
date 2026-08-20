@@ -22,19 +22,11 @@ class Algorithm2:
             for i, box in enumerate(boxes, start=1)
         ]
     def __get_sides(self, tower_path):
-        front_side = []
-        right_side = []
-        back_side = []
-        left_side = []
-        with open(f"{tower_path}/json/front.json") as f:
-            front_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/right.json") as f:
-            right_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/back.json") as f:
-            back_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/left.json") as f:
-            left_side = self.__create_faces(json.load(f))
-        return front_side, right_side, back_side, left_side
+        sides = {}
+        for side in ["front", "right", "back", "left"]:
+            with open(f"{tower_path}/json/{side}.json") as f:
+                sides[side] = self.__create_faces(json.load(f))
+        return sides["front"], sides["right"], sides["back"], sides["left"]
 
     def separate_in_columns(self, level: list):
         """
@@ -59,6 +51,14 @@ class Algorithm2:
 
         return sorted(lines, key=lambda x: x["cast_line"])
 
+    def __count_non_holes(self, columns, slice_):
+        count = 0
+        for column in columns[slice_]:
+            for box_face in column["faces"]:
+                if not box_face.is_hole():
+                    count += 1
+        return count
+
     def solve(self, tower_path):
 
         front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
@@ -82,7 +82,6 @@ class Algorithm2:
             == len(back_levels)
             == len(left_levels)
         ):
-            # fronts levels with rights
             levels_size = len(front_levels)
             count = 0
 
@@ -93,24 +92,9 @@ class Algorithm2:
                 back_columns = self.separate_in_columns(back_levels[level])
                 left_columns = self.separate_in_columns(left_levels[level])
 
-                for column in front_columns:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in right_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in back_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in left_columns[1:-1]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
+                count += self.__count_non_holes(front_columns, slice(None))
+                count += self.__count_non_holes(right_columns, slice(1, None))
+                count += self.__count_non_holes(back_columns, slice(1, None))
+                count += self.__count_non_holes(left_columns, slice(1, -1))
 
             return count

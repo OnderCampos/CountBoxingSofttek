@@ -56,7 +56,6 @@ def separate_into_bins(data, k):
 def kmeans1(data, k, max_iters=200):
     # Randomly initialize centroids
     centroids = separate_into_bins(data, k)
-    #centroids = random.sample(data, k)
 
     for _ in range(max_iters):
         # Assign each data point to the nearest centroid
@@ -80,4 +79,3 @@ def points_in_centroids(data, labels, centroids):
     for point, label in zip(data, labels):
         points_by_centroid[label].append(point)
     return points_by_centroid
-

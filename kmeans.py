@@ -12,7 +12,7 @@ def mean(points):
 
 def kmeans(data, k, max_iters=100):
     # Randomly initialize centroids
-    centroids = random.sample(data, k)
+    centroids = random.SystemRandom().sample(data, k)
 
     for _ in range(max_iters):
         # Assign each data point to the nearest centroid
@@ -80,4 +80,3 @@ def points_in_centroids(data, labels, centroids):
     for point, label in zip(data, labels):
         points_by_centroid[label].append(point)
     return points_by_centroid
-

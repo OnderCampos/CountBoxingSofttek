@@ -81,7 +81,7 @@ class Tower:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def add_side(self, side_name, side_box, image_path):
+    def add_side(self, side_name, side_box):
         # Cluster the boxes using only the ypos
         data = [box.ycenter for box in side_box]
         labels, centers = kmeans1(data, self.levels_num)

@@ -59,6 +59,14 @@ class Algorithm2:
 
         return sorted(lines, key=lambda x: x["cast_line"])
 
+    def __count_visible_faces(self, columns):
+        count = 0
+        for column in columns:
+            for box_face in column["faces"]:
+                if not box_face.is_hole():
+                    count += 1
+        return count
+
     def solve(self, tower_path):
 
         front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
@@ -82,35 +90,18 @@ class Algorithm2:
             == len(back_levels)
             == len(left_levels)
         ):
-            # fronts levels with rights
             levels_size = len(front_levels)
             count = 0
 
             for level in range(levels_size):
-
                 front_columns = self.separate_in_columns(front_levels[level])
                 right_columns = self.separate_in_columns(right_levels[level])
                 back_columns = self.separate_in_columns(back_levels[level])
                 left_columns = self.separate_in_columns(left_levels[level])
 
-                for column in front_columns:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in right_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in back_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in left_columns[1:-1]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
+                count += self.__count_visible_faces(front_columns)
+                count += self.__count_visible_faces(right_columns[1:])
+                count += self.__count_visible_faces(back_columns[1:])
+                count += self.__count_visible_faces(left_columns[1:-1])
 
             return count

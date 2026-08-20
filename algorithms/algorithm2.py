@@ -59,6 +59,27 @@ class Algorithm2:
 
         return sorted(lines, key=lambda x: x["cast_line"])
 
+    def __count_non_holes(self, columns: list) -> int:
+        count = 0
+        for column in columns:
+            for box_face in column["faces"]:
+                if not box_face.is_hole():
+                    count += 1
+        return count
+
+    def __count_level(self, front_level, right_level, back_level, left_level) -> int:
+        front_columns = self.separate_in_columns(front_level)
+        right_columns = self.separate_in_columns(right_level)
+        back_columns = self.separate_in_columns(back_level)
+        left_columns = self.separate_in_columns(left_level)
+
+        return (
+            self.__count_non_holes(front_columns)
+            + self.__count_non_holes(right_columns[1::])
+            + self.__count_non_holes(back_columns[1::])
+            + self.__count_non_holes(left_columns[1:-1])
+        )
+
     def solve(self, tower_path):
 
         front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
@@ -82,35 +103,15 @@ class Algorithm2:
             == len(back_levels)
             == len(left_levels)
         ):
-            # fronts levels with rights
             levels_size = len(front_levels)
             count = 0
 
             for level in range(levels_size):
-
-                front_columns = self.separate_in_columns(front_levels[level])
-                right_columns = self.separate_in_columns(right_levels[level])
-                back_columns = self.separate_in_columns(back_levels[level])
-                left_columns = self.separate_in_columns(left_levels[level])
-
-                for column in front_columns:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in right_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in back_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in left_columns[1:-1]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
+                count += self.__count_level(
+                    front_levels[level],
+                    right_levels[level],
+                    back_levels[level],
+                    left_levels[level],
+                )
 
             return count

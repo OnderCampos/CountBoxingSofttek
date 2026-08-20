@@ -7,6 +7,7 @@ from tower import Tower
 import numpy as np
 import cv2
 
+
 class Algorithm2:
 
     def __create_faces(self, boxes: list):
@@ -21,6 +22,7 @@ class Algorithm2:
             )
             for i, box in enumerate(boxes, start=1)
         ]
+
     def __get_sides(self, tower_path):
         front_side = []
         right_side = []
@@ -59,8 +61,7 @@ class Algorithm2:
 
         return sorted(lines, key=lambda x: x["cast_line"])
 
-    def solve(self, tower_path):
-
+    def __build_tower(self, tower_path):
         front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
             self.__get_sides(tower_path)
         )
@@ -71,46 +72,48 @@ class Algorithm2:
         tower.add_side("back", back_side_faces, f"{tower_path}/images/back.jpg")
         tower.add_side("left", left_side_faces, f"{tower_path}/images/left.jpg")
 
-        front_levels = tower.front.levels
-        right_levels = tower.right.levels
-        back_levels = tower.back.levels
-        left_levels = tower.left.levels
+        return tower
 
-        if (
-            len(front_levels)
-            == len(right_levels)
-            == len(back_levels)
-            == len(left_levels)
-        ):
-            # fronts levels with rights
-            levels_size = len(front_levels)
-            count = 0
+    def __sides_have_equal_levels(self, tower):
+        levels = [
+            len(tower.front.levels),
+            len(tower.right.levels),
+            len(tower.back.levels),
+            len(tower.left.levels),
+        ]
+        return len(set(levels)) == 1
 
-            for level in range(levels_size):
+    def __count_non_holes_in_columns(self, columns, start=0, end=None):
+        count = 0
+        for column in columns[start:end]:
+            for face in column["faces"]:
+                if not face.is_hole():
+                    count += 1
+        return count
 
-                front_columns = self.separate_in_columns(front_levels[level])
-                right_columns = self.separate_in_columns(right_levels[level])
-                back_columns = self.separate_in_columns(back_levels[level])
-                left_columns = self.separate_in_columns(left_levels[level])
+    def __count_level(self, front_columns, right_columns, back_columns, left_columns):
+        count = 0
+        count += self.__count_non_holes_in_columns(front_columns)
+        count += self.__count_non_holes_in_columns(right_columns, 1)
+        count += self.__count_non_holes_in_columns(back_columns, 1)
+        count += self.__count_non_holes_in_columns(left_columns, 1, -1)
+        return count
 
-                for column in front_columns:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
+    def __count_boxes(self, tower):
+        levels_size = len(tower.front.levels)
+        count = 0
+        for level_index in range(levels_size):
+            front_columns = self.separate_in_columns(tower.front.levels[level_index])
+            right_columns = self.separate_in_columns(tower.right.levels[level_index])
+            back_columns = self.separate_in_columns(tower.back.levels[level_index])
+            left_columns = self.separate_in_columns(tower.left.levels[level_index])
+            count += self.__count_level(
+                front_columns, right_columns, back_columns, left_columns
+            )
+        return count
 
-                for column in right_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in back_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in left_columns[1:-1]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-            return count
+    def solve(self, tower_path):
+        tower = self.__build_tower(tower_path)
+        if not self.__sides_have_equal_levels(tower):
+            return None
+        return self.__count_boxes(tower)

@@ -23,7 +23,7 @@ class Tower:
         self.left = None
         self.levels_num = levels
 
-    def show_image(self,side_name ,levels, labels, image_path):
+    def show_image(self,side_name ,levels, image_path):
         image = cv2.imread(image_path)
         colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
         for level in levels:
@@ -103,7 +103,7 @@ class Tower:
         side.sort()
 
         #self.show_levels(levels_list, image_path)
-        #self.show_image(side_name, side.levels, labels, image_path)
+        #self.show_image(side_name, side.levels, image_path)
         if side_name == "front":
             self.front = side
         if side_name == "right":

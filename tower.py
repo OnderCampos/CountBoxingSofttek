@@ -102,7 +102,6 @@ class Tower:
             side.add_level(level)
         side.sort()
 
-        #self.show_levels(levels_list, image_path)
         #self.show_image(side_name, side.levels, labels, image_path)
         if side_name == "front":
             self.front = side

@@ -33,6 +33,7 @@ def kmeans(data, k, max_iters=100):
         centroids = new_centroids
 
     return labels, centroids
+
 def separate_into_bins(data, k):
     # Find the minimum and maximum values of the data
     min_value = min(data)
@@ -53,10 +54,10 @@ def separate_into_bins(data, k):
     means = [sum(bin_values) / len(bin_values) if bin_values else 0 for bin_values in separated_values]
 
     return means
+
 def kmeans1(data, k, max_iters=200):
     # Randomly initialize centroids
     centroids = separate_into_bins(data, k)
-    #centroids = random.sample(data, k)
 
     for _ in range(max_iters):
         # Assign each data point to the nearest centroid
@@ -80,4 +81,3 @@ def points_in_centroids(data, labels, centroids):
     for point, label in zip(data, labels):
         points_by_centroid[label].append(point)
     return points_by_centroid
-

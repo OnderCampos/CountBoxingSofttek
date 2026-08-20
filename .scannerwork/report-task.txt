@@ -1,0 +1,6 @@
+projectKey=test_test
+serverUrl=https://9000-ia7oszaqmbvdygmxk6zo1.e2b.app
+serverVersion=26.8.0.126808
+dashboardUrl=https://9000-ia7oszaqmbvdygmxk6zo1.e2b.app/dashboard?id=test_test
+ceTaskId=ee1f32a8-b555-42a8-99bb-cbd6210c4515
+ceTaskUrl=https://9000-ia7oszaqmbvdygmxk6zo1.e2b.app/api/ce/task?id=ee1f32a8-b555-42a8-99bb-cbd6210c4515

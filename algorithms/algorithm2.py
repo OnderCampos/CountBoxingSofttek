@@ -66,10 +66,10 @@ class Algorithm2:
         )
 
         tower = Tower(levels=3)
-        tower.add_side("front", front_side_faces, f"{tower_path}/images/front.jpg")
-        tower.add_side("right", right_side_faces, f"{tower_path}/images/right.jpg")
-        tower.add_side("back", back_side_faces, f"{tower_path}/images/back.jpg")
-        tower.add_side("left", left_side_faces, f"{tower_path}/images/left.jpg")
+        tower.add_side("front", front_side_faces)
+        tower.add_side("right", right_side_faces)
+        tower.add_side("back", back_side_faces)
+        tower.add_side("left", left_side_faces)
 
         front_levels = tower.front.levels
         right_levels = tower.right.levels

@@ -54,8 +54,8 @@ class Algorithm1:
         return sorted(lines, key=lambda x: x["cast_line"])
 
     # Get the 4 sides
-    def count_corner_holes(self, lineA, lineB):
-        if lineA["faces"][-1].is_hole() and lineB["faces"][0].is_hole():
+    def count_corner_holes(self, line_a, lineB):
+        if line_a["faces"][-1].is_hole() and lineB["faces"][0].is_hole():
             return 1
         return 0
 

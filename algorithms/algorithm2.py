@@ -7,6 +7,7 @@ from tower import Tower
 import numpy as np
 import cv2
 
+
 class Algorithm2:
 
     def __create_faces(self, boxes: list):
@@ -21,6 +22,7 @@ class Algorithm2:
             )
             for i, box in enumerate(boxes, start=1)
         ]
+
     def __get_sides(self, tower_path):
         front_side = []
         right_side = []
@@ -59,6 +61,23 @@ class Algorithm2:
 
         return sorted(lines, key=lambda x: x["cast_line"])
 
+    def __count_visible_boxes(self, columns: list, start: int = 0, end: int = None) -> int:
+        return sum(
+            1
+            for column in columns[start:end]
+            for box_face in column["faces"]
+            if not box_face.is_hole()
+        )
+
+    def __process_level(self, front_level, right_level, back_level, left_level) -> int:
+        count = self.__count_visible_boxes(self.separate_in_columns(front_level))
+        count += self.__count_visible_boxes(self.separate_in_columns(right_level), start=1)
+        count += self.__count_visible_boxes(self.separate_in_columns(back_level), start=1)
+        count += self.__count_visible_boxes(
+            self.separate_in_columns(left_level), start=1, end=-1
+        )
+        return count
+
     def solve(self, tower_path):
 
         front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
@@ -66,10 +85,10 @@ class Algorithm2:
         )
 
         tower = Tower(levels=3)
-        tower.add_side("front", front_side_faces, f"{tower_path}/images/front.jpg")
-        tower.add_side("right", right_side_faces, f"{tower_path}/images/right.jpg")
-        tower.add_side("back", back_side_faces, f"{tower_path}/images/back.jpg")
-        tower.add_side("left", left_side_faces, f"{tower_path}/images/left.jpg")
+        tower.add_side("front", front_side_faces)
+        tower.add_side("right", right_side_faces)
+        tower.add_side("back", back_side_faces)
+        tower.add_side("left", left_side_faces)
 
         front_levels = tower.front.levels
         right_levels = tower.right.levels
@@ -82,35 +101,14 @@ class Algorithm2:
             == len(back_levels)
             == len(left_levels)
         ):
-            # fronts levels with rights
-            levels_size = len(front_levels)
             count = 0
 
-            for level in range(levels_size):
-
-                front_columns = self.separate_in_columns(front_levels[level])
-                right_columns = self.separate_in_columns(right_levels[level])
-                back_columns = self.separate_in_columns(back_levels[level])
-                left_columns = self.separate_in_columns(left_levels[level])
-
-                for column in front_columns:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in right_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in back_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in left_columns[1:-1]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
+            for level in range(len(front_levels)):
+                count += self.__process_level(
+                    front_levels[level],
+                    right_levels[level],
+                    back_levels[level],
+                    left_levels[level],
+                )
 
             return count

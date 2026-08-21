@@ -6,35 +6,9 @@ import matplotlib.pyplot as plt
 from tower import Tower
 import numpy as np
 import cv2
+from algorithms.utils import get_sides
 
 class Algorithm2:
-
-    def __create_faces(self, boxes: list):
-        return [
-            Boxface(
-                int(box["x1"]),
-                int(box["y1"]),
-                int(box["x2"]),
-                int(box["y2"]),
-                False if "is_hole" not in box else box["is_hole"],
-                i,
-            )
-            for i, box in enumerate(boxes, start=1)
-        ]
-    def __get_sides(self, tower_path):
-        front_side = []
-        right_side = []
-        back_side = []
-        left_side = []
-        with open(f"{tower_path}/json/front.json") as f:
-            front_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/right.json") as f:
-            right_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/back.json") as f:
-            back_side = self.__create_faces(json.load(f))
-        with open(f"{tower_path}/json/left.json") as f:
-            left_side = self.__create_faces(json.load(f))
-        return front_side, right_side, back_side, left_side
 
     def separate_in_columns(self, level: list):
         """
@@ -62,7 +36,7 @@ class Algorithm2:
     def solve(self, tower_path):
 
         front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
-            self.__get_sides(tower_path)
+            get_sides(tower_path)
         )
 
         tower = Tower(levels=3)

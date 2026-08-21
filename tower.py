@@ -23,7 +23,7 @@ class Tower:
         self.left = None
         self.levels_num = levels
 
-    def show_image(self,side_name ,levels, labels, image_path):
+    def show_image(self, side_name, levels, image_path):
         image = cv2.imread(image_path)
         colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
         for level in levels:
@@ -81,7 +81,7 @@ class Tower:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def add_side(self, side_name, side_box, image_path):
+    def add_side(self, side_name, side_box):
         # Cluster the boxes using only the ypos
         data = [box.ycenter for box in side_box]
         labels, centers = kmeans1(data, self.levels_num)
@@ -102,8 +102,6 @@ class Tower:
             side.add_level(level)
         side.sort()
 
-        #self.show_levels(levels_list, image_path)
-        #self.show_image(side_name, side.levels, labels, image_path)
         if side_name == "front":
             self.front = side
         if side_name == "right":

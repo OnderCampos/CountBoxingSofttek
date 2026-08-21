@@ -7,6 +7,7 @@ from tower import Tower
 import numpy as np
 import cv2
 
+
 class Algorithm2:
 
     def __create_faces(self, boxes: list):
@@ -21,6 +22,7 @@ class Algorithm2:
             )
             for i, box in enumerate(boxes, start=1)
         ]
+
     def __get_sides(self, tower_path):
         front_side = []
         right_side = []
@@ -35,6 +37,14 @@ class Algorithm2:
         with open(f"{tower_path}/json/left.json") as f:
             left_side = self.__create_faces(json.load(f))
         return front_side, right_side, back_side, left_side
+
+    def __count_non_holes(self, columns, start=0, end=None):
+        return sum(
+            1
+            for column in columns[start:end]
+            for box_face in column["faces"]
+            if not box_face.is_hole()
+        )
 
     def separate_in_columns(self, level: list):
         """
@@ -61,15 +71,13 @@ class Algorithm2:
 
     def solve(self, tower_path):
 
-        front_side_faces, right_side_faces, back_side_faces, left_side_faces = (
-            self.__get_sides(tower_path)
-        )
+        sides = self.__get_sides(tower_path)
 
         tower = Tower(levels=3)
-        tower.add_side("front", front_side_faces, f"{tower_path}/images/front.jpg")
-        tower.add_side("right", right_side_faces, f"{tower_path}/images/right.jpg")
-        tower.add_side("back", back_side_faces, f"{tower_path}/images/back.jpg")
-        tower.add_side("left", left_side_faces, f"{tower_path}/images/left.jpg")
+        names = ["front", "right", "back", "left"]
+
+        for name, side_faces in zip(names, sides):
+            tower.add_side(name, side_faces)
 
         front_levels = tower.front.levels
         right_levels = tower.right.levels
@@ -82,35 +90,18 @@ class Algorithm2:
             == len(back_levels)
             == len(left_levels)
         ):
-            # fronts levels with rights
             levels_size = len(front_levels)
             count = 0
 
             for level in range(levels_size):
-
                 front_columns = self.separate_in_columns(front_levels[level])
                 right_columns = self.separate_in_columns(right_levels[level])
                 back_columns = self.separate_in_columns(back_levels[level])
                 left_columns = self.separate_in_columns(left_levels[level])
 
-                for column in front_columns:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in right_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in back_columns[1::]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
-
-                for column in left_columns[1:-1]:
-                    for box_face in column["faces"]:
-                        if not box_face.is_hole():
-                            count += 1
+                count += self.__count_non_holes(front_columns)
+                count += self.__count_non_holes(right_columns, start=1)
+                count += self.__count_non_holes(back_columns, start=1)
+                count += self.__count_non_holes(left_columns, start=1, end=-1)
 
             return count
